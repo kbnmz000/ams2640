@@ -4,14 +4,8 @@
    For dealing with column name with space, use "<varname>"n */
 
 FILENAME DATAUTF "/home/u49784411/ttemp/top10s_utf8.csv" ENCODING='utf-8';
-*FILENAME DATAUTF "D:/top10s_utf8.csv" ENCODING='utf-8';
-/* Make graph bigger
-ods graphics / width=20in;
-ods graphics / height=15in;
-*/
 
-
-/* Import the csv data and print it out */
+/* Import the csv data */
 PROC IMPORT DATAFILE=DATAUTF
     OUT=ams
     DBMS=CSV
@@ -20,8 +14,6 @@ PROC IMPORT DATAFILE=DATAUTF
     DELIMITER=",";    
 RUN;
 
-PROC PRINT DATA=ams;
-RUN;
 
 /* Drop id column and subset variables into 3 categories */
 DATA ams;
@@ -39,7 +31,12 @@ DATA ams;
 RUN;
 
 
-/* Info and stat for variables */
+/* PDF print output start here */
+ODS PDF FILE = '/home/u49784411/ttemp/ams2640.pdf' STARTPAGE=NO;
+ODS NOPROCTITLE;
+
+
+/* Info and statistics for variables */
 PROC CONTENTS DATA=ams;
 RUN;
 
@@ -55,29 +52,24 @@ PROC CORR DATA=ams PEARSON
     PLOTS=MATRIX(HISTOGRAM NVAR=ALL)
     PLOTS(MAXPOINTS=1000000);
     VAR bpm nrgy dnce dB live val dur acous spch pop;
-RUN;
-
-
-/* Artist and songs' genre in 2015 */
-PROC PRINT DATA=ams;
-    WHERE year=2015;
-    VAR artist "top genre"n;
+    WHERE "top genre"n="dance pop";
 RUN;
 
 
 /* -----Graph----- */
 /* Show pie chart with top 20 different genre (including others) */
 PROC SGPIE DATA=ams;
-    PIE "top genre"n / MAXSLICES=20 SLICEORDER=RESPASC;
+    PIE "top genre"n / MAXSLICES=20 SLICEORDER=RESPASC OTHERLABEL="Others";
     TITLE "Top 20 genre of songs";
 RUN;
 
 
 /* Barchart for year and subsetted variables */
 PROC SGPLOT DATA=ams;
-    VBAR year;
+    VBAR year / COLORSTAT=FREQ;
     YAXIS LABEL="Count";
     TITLE "Bar chart by year";
+    	
 RUN;
 
 PROC SGPLOT DATA=ams;
@@ -138,14 +130,16 @@ PROC SGPLOT DATA=ams;
     HISTOGRAM bpm / SHOWBINS;
     DENSITY bpm / TYPE=NORMAL;
     DENSITY bpm / TYPE=KERNEL;
-    TITLE "Histogram of bpm with category";
+    TITLE "Histogram of bpm";
+    YAXIS LABEL="Percentage";
 RUN;
 
 PROC SGPLOT DATA=ams;
     HISTOGRAM val / SHOWBINS;
     DENSITY val / TYPE=NORMAL;
     DENSITY val / TYPE=KERNEL;
-    TITLE "Histogram of val with category";
+    TITLE "Histogram of val";
+    YAXIS LABEL="Percentage";
 RUN;
 
 
@@ -160,25 +154,33 @@ RUN;
 PROC SGPLOT DATA=ams;
     HISTOGRAM bpm / GROUP=bpmsub;
     WHERE "top genre"n="dance pop";
+    DENSITY bpm / TYPE=KERNEL;
     TITLE "Histogram of bpm with category in dance pop genre";
+    YAXIS LABEL="Percentage";
 RUN;
 
 PROC SGPLOT DATA=ams;
     HISTOGRAM nrgy / GROUP=nrgysub;
     WHERE "top genre"n="dance pop";
+    DENSITY nrgy / TYPE=KERNEL;
     TITLE "Histogram of nrgy with category in dance pop genre";
+    YAXIS LABEL="Percentage";
 RUN;
 
 PROC SGPLOT DATA=ams;
     HISTOGRAM dnce / GROUP=dncesub;
     WHERE "top genre"n="dance pop";
+    DENSITY dnce / TYPE=KERNEL;
     TITLE "Histogram of dnce with category in dance pop genre";
+    YAXIS LABEL="Percentage";
 RUN;
 
 PROC SGPLOT DATA=ams;
     HISTOGRAM db;
     WHERE "top genre"n="dance pop";
+    DENSITY db / TYPE=KERNEL;
     TITLE "Histogram of db in dance pop genre";
+    YAXIS LABEL="Percentage";
 RUN;
 
 
@@ -191,7 +193,7 @@ PROC SGPLOT DATA=ams;
 RUN;
 
 
-/* Count frequency group by artist and year, then delete duplicate records */
+/* Count frequency group by artist and year, then delete duplicate records if any */
 PROC SQL;
     CREATE TABLE acount AS
     (SELECT artist, year, COUNT(artist) AS Count
@@ -203,10 +205,8 @@ PROC SORT DATA=acount NODUPKEY;
     BY _ALL_;
 RUN;
 
-PROC PRINT DATA=acount;
-RUN;
 
-/* Show trend of frequency of artist */
+/* Show trend of frequency of artist from data above */
 PROC SGPLOT DATA=acount;
     SERIES X=year Y=count / GROUP=artist DATALABEL=artist;
     XAXIS VALUES=(2010 TO 2019 BY 1);
@@ -214,6 +214,38 @@ PROC SGPLOT DATA=acount;
 RUN;
 
 
+/* Find all songs of of selected artists in every year */
+PROC PRINT DATA=AMS;
+    VAR artist title "top genre"n year;
+    WHERE artist="Justin Bieber" OR artist="Lady Gaga" OR artist="Ed Sheeran";
+    BY year;
+RUN;
 
-/* Not the end, still making...... 
-   しばらくお待ち下さい */
+
+/* Correlation matrix for variables of selected artists */
+PROC CORR DATA=ams PEARSON 
+    PLOTS=MATRIX(HISTOGRAM NVAR=ALL)
+    PLOTS(MAXPOINTS=1000000);
+	WHERE artist="Justin Bieber" OR artist="Lady Gaga" OR artist="Ed Sheeran";
+    VAR bpm nrgy dnce dB live val dur acous spch pop;
+	TITLE "Correlation matrix for variables of selected artists";
+RUN;
+
+
+/* Conduct one-way ANOVA for numeric variables of selected artists */
+PROC ANOVA DATA=AMS;
+    WHERE artist="Justin Bieber" OR artist="Lady Gaga" OR artist="Ed Sheeran";
+	CLASS artist;
+	MODEL bpm nrgy dnce dB live val dur acous spch pop=artist;
+    TITLE "ANOVA for dB-nrgy of selected artists";
+RUN;
+
+
+/* PDF print output till here */
+ODS PDF CLOSE;
+
+
+/* Export sas dataset to sas7bdat */
+DATA "/home/u49784411/ttemp";
+   SET AMS;
+RUN;
