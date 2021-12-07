@@ -1,0 +1,954 @@
+ 
+ 1          OPTIONS NONOTES NOSTIMER NOSOURCE NOSYNTAXCHECK;
+ NOTE: ODS statements in the SAS Studio environment may disable some output features.
+ 71         
+ 72         /* We download the dataset previously, so local file will be used
+ 73            We use UTF-8 to encode the dataset
+ 74            Otherwise, [ERROR: Invalid characters were present in the data.] will be showed
+ 75            We use SAS® OnDemand for Academics for this project
+ 76            For dealing with column name with space, use "<varname>"n
+ 77            Some preproduction features cannot be used on SAS 9.4 1M4 Desktop version */
+ 78         
+ 79         /* Set file reference */
+ 80         FILENAME DATAUTF "/home/u49784411/ttemp/top10s_utf8.csv" ENCODING='utf-8';
+ 81         
+ 82         
+ 83         /* Stop creating previous title */
+ 84         TITLE;
+ 85         
+ 86         
+ 87         /* Import the csv data */
+ 88         PROC IMPORT DATAFILE=DATAUTF
+ 89             OUT=AMS
+ 90             DBMS=CSV
+ 91             REPLACE;
+ 92             GUESSINGROWS=1000;
+ 93             DELIMITER=",";
+ 94         RUN;
+ 
+ NOTE: Unable to open parameter catalog: SASUSER.PARMS.PARMS.SLIST in update mode. Temporary parameter values will be saved to 
+ WORK.PARMS.PARMS.SLIST.
+ Name  is not a valid SAS name.
+ Problems were detected with provided names.  See LOG. 
+ 95          /**********************************************************************
+ 96          *   PRODUCT:   SAS
+ 97          *   VERSION:   9.4
+ 98          *   CREATOR:   External File Interface
+ 99          *   DATE:      07DEC21
+ 100         *   DESC:      Generated SAS Datastep Code
+ 101         *   TEMPLATE SOURCE:  (None Specified.)
+ 102         ***********************************************************************/
+ 103            data WORK.AMS    ;
+ 104            %let _EFIERR_ = 0; /* set the ERROR detection macro variable */
+ 105            infile DATAUTF delimiter = ',' MISSOVER DSD  firstobs=2 ;
+ 106               informat VAR1 best32. ;
+ 107               informat title $104. ;
+ 108               informat artist $24. ;
+ 109               informat "top genre"N $25. ;
+ 110               informat year best32. ;
+ 111               informat bpm best32. ;
+ 112               informat nrgy best32. ;
+ 113               informat dnce best32. ;
+ 114               informat dB best32. ;
+ 115               informat live best32. ;
+ 116               informat val best32. ;
+ 117               informat dur best32. ;
+ 118               informat acous best32. ;
+ 119               informat spch best32. ;
+ 120               informat pop best32. ;
+ 121               format VAR1 best12. ;
+ 122               format title $104. ;
+ 123               format artist $24. ;
+ 124               format "top genre"N $25. ;
+ 125               format year best12. ;
+ 126               format bpm best12. ;
+ 127               format nrgy best12. ;
+ 128               format dnce best12. ;
+ 129               format dB best12. ;
+ 130               format live best12. ;
+ 131               format val best12. ;
+ 132               format dur best12. ;
+ 133               format acous best12. ;
+ 134               format spch best12. ;
+ 135               format pop best12. ;
+ 136            input
+ 137                        VAR1
+ 138                        title  $
+ 139                        artist  $
+ 140                        "top genre"N  $
+ 141                        year
+ 142                        bpm
+ 143                        nrgy
+ 144                        dnce
+ 145                        dB
+ 146                        live
+ 147                        val
+ 148                        dur
+ 149                        acous
+ 150                        spch
+ 151                        pop
+ 152            ;
+ 153            if _ERROR_ then call symputx('_EFIERR_',1);  /* set ERROR detection macro variable */
+ 154            run;
+ 
+ NOTE: The infile DATAUTF is:
+       Filename=/home/u49784411/ttemp/top10s_utf8.csv,
+       Owner Name=u49784411,Group Name=oda,
+       Access Permission=-rw-r--r--,
+       Last Modified=24Nov2021:14:36:57,
+       File Size (bytes)=49020
+ 
+ NOTE: 603 records were read from the infile DATAUTF.
+       The minimum record length was 54.
+       The maximum record length was 174.
+ NOTE: The data set WORK.AMS has 603 observations and 15 variables.
+ NOTE: DATA statement used (Total process time):
+       real time           0.00 seconds
+       user cpu time       0.00 seconds
+       system cpu time     0.00 seconds
+       memory              9803.21k
+       OS Memory           42792.00k
+       Timestamp           12/07/2021 03:04:43 PM
+       Step Count                        84  Switch Count  2
+       Page Faults                       0
+       Page Reclaims                     220
+       Page Swaps                        0
+       Voluntary Context Switches        11
+       Involuntary Context Switches      0
+       Block Input Operations            0
+       Block Output Operations           520
+       
+ 
+ 603 rows created in WORK.AMS from DATAUTF.
+   
+   
+   
+ NOTE: WORK.AMS data set was successfully created.
+ NOTE: The data set WORK.AMS has 603 observations and 15 variables.
+ NOTE: PROCEDURE IMPORT used (Total process time):
+       real time           0.37 seconds
+       user cpu time       0.32 seconds
+       system cpu time     0.01 seconds
+       memory              9803.21k
+       OS Memory           42792.00k
+       Timestamp           12/07/2021 03:04:43 PM
+       Step Count                        84  Switch Count  12
+       Page Faults                       0
+       Page Reclaims                     2178
+       Page Swaps                        0
+       Voluntary Context Switches        89
+       Involuntary Context Switches      0
+       Block Input Operations            0
+       Block Output Operations           584
+       
+ 
+ 155        
+ 156        
+ 157        /* Drop id column and subset variables into 3 categories */
+ 158        DATA AMS;
+ 159            SET AMS;
+ 160            DROP VAR1;
+ 161            IF bpm<144 AND bpm>=103 THEN bpmsub="Medium";
+ 162                ELSE IF bpm<103 THEN bpmsub="Slow";
+ 163                ELSE IF bpm>=144 THEN bpmsub="Fast";
+ 164            IF nrgy<78 AND nrgy>=49 THEN nrgysub="Medium";
+ 165                ELSE IF nrgy<49 THEN nrgysub="Low";
+ 166                ELSE IF nrgy>=78 THEN nrgysub="High";
+ 167            IF dnce<77 AND dnce>=48 THEN dncesub="Medium";
+ 168                ELSE IF dnce<48 THEN dncesub="Low";
+ 169                ELSE IF dnce>=77 THEN dncesub="High";
+ 170        RUN;
+ 
+ NOTE: There were 603 observations read from the data set WORK.AMS.
+ NOTE: The data set WORK.AMS has 603 observations and 17 variables.
+ NOTE: DATA statement used (Total process time):
+       real time           0.00 seconds
+       user cpu time       0.00 seconds
+       system cpu time     0.00 seconds
+       memory              1229.40k
+       OS Memory           37808.00k
+       Timestamp           12/07/2021 03:04:43 PM
+       Step Count                        85  Switch Count  2
+       Page Faults                       0
+       Page Reclaims                     95
+       Page Swaps                        0
+       Voluntary Context Switches        12
+       Involuntary Context Switches      0
+       Block Input Operations            0
+       Block Output Operations           520
+       
+ 
+ 171        
+ 172        
+ 173        /* PDF print output start here */
+ 174        ODS PDF FILE = "/home/u49784411/ttemp/AMS2640_Output_35.pdf" STARTPAGE=NO;
+ NOTE: Writing ODS PDF output to DISK destination "/home/u49784411/ttemp/AMS2640_Output_35.pdf", printer "PDF".
+ 175        ODS NOPROCTITLE;
+ 176        
+ 177        
+ 178        /* Info and statistics for variables */
+ 179        PROC CONTENTS DATA=AMS;
+ 180        RUN;
+ 
+ NOTE: PROCEDURE CONTENTS used (Total process time):
+       real time           0.08 seconds
+       user cpu time       0.08 seconds
+       system cpu time     0.00 seconds
+       memory              3311.06k
+       OS Memory           39860.00k
+       Timestamp           12/07/2021 03:04:44 PM
+       Step Count                        86  Switch Count  0
+       Page Faults                       0
+       Page Reclaims                     268
+       Page Swaps                        0
+       Voluntary Context Switches        0
+       Involuntary Context Switches      0
+       Block Input Operations            0
+       Block Output Operations           32
+       
+ 
+ 181        
+ 182        
+ 183        /* Compute summary statistics for numeric variables except year */
+ 184        PROC UNIVARIATE DATA=AMS;
+ 185            VAR bpm nrgy dnce dB live val dur acous spch pop;
+ 186        RUN;
+ 
+ NOTE: PROCEDURE UNIVARIATE used (Total process time):
+       real time           0.61 seconds
+       user cpu time       0.62 seconds
+       system cpu time     0.00 seconds
+       memory              1700.90k
+       OS Memory           40368.00k
+       Timestamp           12/07/2021 03:04:44 PM
+       Step Count                        87  Switch Count  0
+       Page Faults                       0
+       Page Reclaims                     203
+       Page Swaps                        0
+       Voluntary Context Switches        0
+       Involuntary Context Switches      1
+       Block Input Operations            0
+       Block Output Operations           296
+       
+ 
+ 187        
+ 188        
+ 189        /* Correlation matrix between variables with scatter Matrix for variables */
+ 190        PROC CORR DATA=AMS PEARSON
+ 191            PLOTS=MATRIX(HISTOGRAM NVAR=ALL)
+ 192            PLOTS(MAXPOINTS=1000000);
+ 193            VAR bpm nrgy dnce dB live val dur acous spch pop;
+ 194        RUN;
+ 
+ NOTE: PROCEDURE CORR used (Total process time):
+       real time           4.66 seconds
+       user cpu time       2.43 seconds
+       system cpu time     0.31 seconds
+       memory              97182.71k
+       OS Memory           135604.00k
+       Timestamp           12/07/2021 03:04:49 PM
+       Step Count                        88  Switch Count  0
+       Page Faults                       0
+       Page Reclaims                     129870
+       Page Swaps                        0
+       Voluntary Context Switches        631
+       Involuntary Context Switches      4
+       Block Input Operations            0
+       Block Output Operations           1928
+       
+ 
+ 195        
+ 196        
+ 197        /* -----Graph----- */
+ 198        /* Show pie chart with top 20 different genre (including others) */
+ 199        PROC SGPIE DATA=AMS;
+ 200            PIE "top genre"n / MAXSLICES=20 SLICEORDER=RESPASC OTHERLABEL="Others";
+ 201            TITLE "Top 20 genre of songs";
+ 202        RUN;
+ 
+ NOTE: The SGPIE procedure is pre-production for this release.
+ NOTE: PROCEDURE SGPIE used (Total process time):
+       real time           2.68 seconds
+       user cpu time       2.12 seconds
+       system cpu time     0.07 seconds
+       memory              21731.93k
+       OS Memory           136568.00k
+       Timestamp           12/07/2021 03:04:51 PM
+       Step Count                        89  Switch Count  13
+       Page Faults                       0
+       Page Reclaims                     11201
+       Page Swaps                        0
+       Voluntary Context Switches        94
+       Involuntary Context Switches      1
+       Block Input Operations            0
+       Block Output Operations           12080
+       
+ NOTE: There were 603 observations read from the data set WORK.AMS.
+ 
+ 203        
+ 204        
+ 205        /* Barchart for year and subsetted variables */
+ 206        PROC SGPLOT DATA=AMS;
+ 207            VBAR year / COLORSTAT=FREQ;
+ 208            YAXIS LABEL="Count";
+ 209            TITLE "Bar chart by year";
+ 210            
+ 211        RUN;
+ 
+ NOTE: PROCEDURE SGPLOT used (Total process time):
+       real time           0.15 seconds
+       user cpu time       0.06 seconds
+       system cpu time     0.00 seconds
+       memory              2724.65k
+       OS Memory           116408.00k
+       Timestamp           12/07/2021 03:04:52 PM
+       Step Count                        90  Switch Count  3
+       Page Faults                       0
+       Page Reclaims                     508
+       Page Swaps                        0
+       Voluntary Context Switches        253
+       Involuntary Context Switches      2
+       Block Input Operations            0
+       Block Output Operations           464
+       
+ NOTE: There were 603 observations read from the data set WORK.AMS.
+ 
+ 212        
+ 213        PROC SGPLOT DATA=AMS;
+ 214            VBAR bpmsub;
+ 215            YAXIS LABEL="Count";
+ 216            TITLE "Bar chart of bpm by category";
+ 217        RUN;
+ 
+ NOTE: PROCEDURE SGPLOT used (Total process time):
+       real time           0.14 seconds
+       user cpu time       0.06 seconds
+       system cpu time     0.01 seconds
+       memory              2722.37k
+       OS Memory           116536.00k
+       Timestamp           12/07/2021 03:04:52 PM
+       Step Count                        91  Switch Count  3
+       Page Faults                       0
+       Page Reclaims                     546
+       Page Swaps                        0
+       Voluntary Context Switches        258
+       Involuntary Context Switches      0
+       Block Input Operations            0
+       Block Output Operations           456
+       
+ NOTE: There were 603 observations read from the data set WORK.AMS.
+ 
+ 218        
+ 219        PROC SGPLOT DATA=AMS;
+ 220            VBAR nrgysub;
+ 221            YAXIS LABEL="Count";
+ 222            TITLE "Bar chart of nrgy by category";
+ 223        RUN;
+ 
+ NOTE: PROCEDURE SGPLOT used (Total process time):
+       real time           0.14 seconds
+       user cpu time       0.06 seconds
+       system cpu time     0.01 seconds
+       memory              2579.09k
+       OS Memory           116792.00k
+       Timestamp           12/07/2021 03:04:52 PM
+       Step Count                        92  Switch Count  3
+       Page Faults                       0
+       Page Reclaims                     575
+       Page Swaps                        0
+       Voluntary Context Switches        261
+       Involuntary Context Switches      0
+       Block Input Operations            0
+       Block Output Operations           456
+       
+ NOTE: There were 603 observations read from the data set WORK.AMS.
+ 
+ 224        
+ 225        PROC SGPLOT DATA=AMS;
+ 226            VBAR dncesub;
+ 227            YAXIS LABEL="Count";
+ 228            TITLE "Bar chart of dnce by category";
+ 229        RUN;
+ 
+ NOTE: PROCEDURE SGPLOT used (Total process time):
+       real time           0.12 seconds
+       user cpu time       0.05 seconds
+       system cpu time     0.01 seconds
+       memory              2698.03k
+       OS Memory           116920.00k
+       Timestamp           12/07/2021 03:04:52 PM
+       Step Count                        93  Switch Count  3
+       Page Faults                       0
+       Page Reclaims                     605
+       Page Swaps                        0
+       Voluntary Context Switches        259
+       Involuntary Context Switches      0
+       Block Input Operations            0
+       Block Output Operations           440
+       
+ NOTE: There were 603 observations read from the data set WORK.AMS.
+ 
+ 230        
+ 231        
+ 232        /* Show pie chart for subsetted variables */
+ 233        PROC SGPIE DATA=AMS;
+ 234            PIE bpmsub / SLICEORDER=RESPASC DATALABELDISPLAY=ALL;
+ 235            TITLE "Pie chart of bpm by category";
+ 236        RUN;
+ 
+ NOTE: The SGPIE procedure is pre-production for this release.
+ NOTE: PROCEDURE SGPIE used (Total process time):
+       real time           0.51 seconds
+       user cpu time       0.04 seconds
+       system cpu time     0.01 seconds
+       memory              3087.03k
+       OS Memory           117440.00k
+       Timestamp           12/07/2021 03:04:53 PM
+       Step Count                        94  Switch Count  13
+       Page Faults                       0
+       Page Reclaims                     439
+       Page Swaps                        0
+       Voluntary Context Switches        88
+       Involuntary Context Switches      0
+       Block Input Operations            0
+       Block Output Operations           992
+       
+ NOTE: There were 603 observations read from the data set WORK.AMS.
+ 
+ 237        
+ 238        PROC SGPIE DATA=AMS;
+ 239            PIE nrgysub / SLICEORDER=RESPASC DATALABELDISPLAY=ALL;
+ 240            TITLE "Pie chart of nrgy by category";
+ 241        RUN;
+ 
+ NOTE: The SGPIE procedure is pre-production for this release.
+ NOTE: PROCEDURE SGPIE used (Total process time):
+       real time           0.50 seconds
+       user cpu time       0.04 seconds
+       system cpu time     0.01 seconds
+       memory              3261.65k
+       OS Memory           117440.00k
+       Timestamp           12/07/2021 03:04:53 PM
+       Step Count                        95  Switch Count  13
+       Page Faults                       0
+       Page Reclaims                     478
+       Page Swaps                        0
+       Voluntary Context Switches        90
+       Involuntary Context Switches      0
+       Block Input Operations            0
+       Block Output Operations           1008
+       
+ NOTE: There were 603 observations read from the data set WORK.AMS.
+ 
+ 242        
+ 243        PROC SGPIE DATA=AMS;
+ 244            PIE dncesub / SLICEORDER=RESPASC DATALABELDISPLAY=ALL;
+ 245            TITLE "Pie chart of dnce by category";
+ 246        RUN;
+ 
+ NOTE: The SGPIE procedure is pre-production for this release.
+ NOTE: PROCEDURE SGPIE used (Total process time):
+       real time           0.50 seconds
+       user cpu time       0.04 seconds
+       system cpu time     0.00 seconds
+       memory              3262.12k
+       OS Memory           117440.00k
+       Timestamp           12/07/2021 03:04:54 PM
+       Step Count                        96  Switch Count  13
+       Page Faults                       0
+       Page Reclaims                     466
+       Page Swaps                        0
+       Voluntary Context Switches        92
+       Involuntary Context Switches      0
+       Block Input Operations            0
+       Block Output Operations           992
+       
+ NOTE: There were 603 observations read from the data set WORK.AMS.
+ 
+ 247        
+ 248        
+ 249        /* Box plot for subsetted variables with category */
+ 250        PROC SGPLOT DATA=AMS;
+ 251            HBOX bpm / CATEGORY=bpmsub;
+ 252            TITLE "Box plot of bpm with category";
+ 253        RUN;
+ 
+ NOTE: PROCEDURE SGPLOT used (Total process time):
+       real time           0.15 seconds
+       user cpu time       0.07 seconds
+       system cpu time     0.01 seconds
+       memory              3003.12k
+       OS Memory           116792.00k
+       Timestamp           12/07/2021 03:04:54 PM
+       Step Count                        97  Switch Count  2
+       Page Faults                       0
+       Page Reclaims                     399
+       Page Swaps                        0
+       Voluntary Context Switches        451
+       Involuntary Context Switches      0
+       Block Input Operations            0
+       Block Output Operations           504
+       
+ NOTE: There were 603 observations read from the data set WORK.AMS.
+ 
+ 254        
+ 255        PROC SGPLOT DATA=AMS;
+ 256            HBOX nrgy / CATEGORY=nrgysub;
+ 257            TITLE "Box plot of nrgy with category";
+ 258        RUN;
+ 
+ NOTE: PROCEDURE SGPLOT used (Total process time):
+       real time           0.13 seconds
+       user cpu time       0.05 seconds
+       system cpu time     0.01 seconds
+       memory              2684.28k
+       OS Memory           116792.00k
+       Timestamp           12/07/2021 03:04:54 PM
+       Step Count                        98  Switch Count  2
+       Page Faults                       0
+       Page Reclaims                     329
+       Page Swaps                        0
+       Voluntary Context Switches        473
+       Involuntary Context Switches      0
+       Block Input Operations            0
+       Block Output Operations           512
+       
+ NOTE: There were 603 observations read from the data set WORK.AMS.
+ 
+ 259        
+ 260        PROC SGPLOT DATA=AMS;
+ 261            HBOX dnce / CATEGORY=dncesub;
+ 262            TITLE "Box plot of dnce with category";
+ 263        RUN;
+ 
+ NOTE: PROCEDURE SGPLOT used (Total process time):
+       real time           0.14 seconds
+       user cpu time       0.06 seconds
+       system cpu time     0.01 seconds
+       memory              2812.12k
+       OS Memory           116792.00k
+       Timestamp           12/07/2021 03:04:54 PM
+       Step Count                        99  Switch Count  2
+       Page Faults                       0
+       Page Reclaims                     341
+       Page Swaps                        0
+       Voluntary Context Switches        464
+       Involuntary Context Switches      0
+       Block Input Operations            0
+       Block Output Operations           512
+       
+ NOTE: There were 603 observations read from the data set WORK.AMS.
+ 
+ 264        
+ 265        
+ 266        /* Histogram for bpm and val */
+ 267        PROC SGPLOT DATA=AMS;
+ 268            HISTOGRAM bpm / SHOWBINS;
+ 269            DENSITY bpm / TYPE=NORMAL;
+ 270            DENSITY bpm / TYPE=KERNEL;
+ 271            TITLE "Histogram of bpm";
+ 272            YAXIS LABEL="Percentage";
+ 273        RUN;
+ 
+ NOTE: PROCEDURE SGPLOT used (Total process time):
+       real time           0.16 seconds
+       user cpu time       0.07 seconds
+       system cpu time     0.01 seconds
+       memory              2899.75k
+       OS Memory           116792.00k
+       Timestamp           12/07/2021 03:04:54 PM
+       Step Count                        100  Switch Count  2
+       Page Faults                       0
+       Page Reclaims                     422
+       Page Swaps                        0
+       Voluntary Context Switches        330
+       Involuntary Context Switches      0
+       Block Input Operations            0
+       Block Output Operations           592
+       
+ NOTE: Some of the tick values have been thinned.
+ NOTE: Some of the tick values have been thinned.
+ NOTE: Some of the tick values have been thinned.
+ NOTE: There were 603 observations read from the data set WORK.AMS.
+ 
+ 274        
+ 275        PROC SGPLOT DATA=AMS;
+ 276            HISTOGRAM val / SHOWBINS;
+ 277            DENSITY val / TYPE=NORMAL;
+ 278            DENSITY val / TYPE=KERNEL;
+ 279            TITLE "Histogram of val";
+ 280            YAXIS LABEL="Percentage";
+ 281        RUN;
+ 
+ NOTE: PROCEDURE SGPLOT used (Total process time):
+       real time           0.17 seconds
+       user cpu time       0.06 seconds
+       system cpu time     0.01 seconds
+       memory              3013.15k
+       OS Memory           116792.00k
+       Timestamp           12/07/2021 03:04:54 PM
+       Step Count                        101  Switch Count  2
+       Page Faults                       0
+       Page Reclaims                     402
+       Page Swaps                        0
+       Voluntary Context Switches        312
+       Involuntary Context Switches      0
+       Block Input Operations            0
+       Block Output Operations           616
+       
+ NOTE: There were 603 observations read from the data set WORK.AMS.
+ 
+ 282        
+ 283        
+ 284        
+ 285        /* Histogram of dance pop genre with bpm, nrgy, dnce with category */
+ 286        PROC SGPLOT DATA=AMS;
+ 287            HISTOGRAM bpm / GROUP=bpmsub;
+ 288            WHERE "top genre"n="dance pop";
+ 289            DENSITY bpm / TYPE=KERNEL;
+ 290            TITLE "Histogram of bpm with category in dance pop genre";
+ 291            YAXIS LABEL="Percentage";
+ 292        RUN;
+ 
+ NOTE: PROCEDURE SGPLOT used (Total process time):
+       real time           0.20 seconds
+       user cpu time       0.09 seconds
+       system cpu time     0.00 seconds
+       memory              3277.96k
+       OS Memory           117308.00k
+       Timestamp           12/07/2021 03:04:55 PM
+       Step Count                        102  Switch Count  7
+       Page Faults                       0
+       Page Reclaims                     461
+       Page Swaps                        0
+       Voluntary Context Switches        676
+       Involuntary Context Switches      0
+       Block Input Operations            0
+       Block Output Operations           568
+       
+ NOTE: There were 327 observations read from the data set WORK.AMS.
+       WHERE 'top genre'n='dance pop';
+ 
+ 293        
+ 294        PROC SGPLOT DATA=AMS;
+ 295            HISTOGRAM nrgy / GROUP=nrgysub;
+ 296            WHERE "top genre"n="dance pop";
+ 297            DENSITY nrgy / TYPE=KERNEL;
+ 298            TITLE "Histogram of nrgy with category in dance pop genre";
+ 299            YAXIS LABEL="Percentage";
+ 300        RUN;
+ 
+ NOTE: PROCEDURE SGPLOT used (Total process time):
+       real time           0.17 seconds
+       user cpu time       0.07 seconds
+       system cpu time     0.01 seconds
+       memory              3088.46k
+       OS Memory           117052.00k
+       Timestamp           12/07/2021 03:04:55 PM
+       Step Count                        103  Switch Count  8
+       Page Faults                       0
+       Page Reclaims                     564
+       Page Swaps                        0
+       Voluntary Context Switches        488
+       Involuntary Context Switches      20
+       Block Input Operations            0
+       Block Output Operations           576
+       
+ NOTE: There were 327 observations read from the data set WORK.AMS.
+       WHERE 'top genre'n='dance pop';
+ 
+ 301        
+ 302        PROC SGPLOT DATA=AMS;
+ 303            HISTOGRAM dnce / GROUP=dncesub;
+ 304            WHERE "top genre"n="dance pop";
+ 305            DENSITY dnce / TYPE=KERNEL;
+ 306            TITLE "Histogram of dnce with category in dance pop genre";
+ 307            YAXIS LABEL="Percentage";
+ 308        RUN;
+ 
+ NOTE: PROCEDURE SGPLOT used (Total process time):
+       real time           0.16 seconds
+       user cpu time       0.06 seconds
+       system cpu time     0.01 seconds
+       memory              3088.43k
+       OS Memory           117308.00k
+       Timestamp           12/07/2021 03:04:55 PM
+       Step Count                        104  Switch Count  8
+       Page Faults                       0
+       Page Reclaims                     538
+       Page Swaps                        0
+       Voluntary Context Switches        536
+       Involuntary Context Switches      0
+       Block Input Operations            0
+       Block Output Operations           544
+       
+ NOTE: There were 327 observations read from the data set WORK.AMS.
+       WHERE 'top genre'n='dance pop';
+ 
+ 309        
+ 310        PROC SGPLOT DATA=AMS;
+ 311            HISTOGRAM db;
+ 312            WHERE "top genre"n="dance pop";
+ 313            DENSITY db / TYPE=KERNEL;
+ 314            TITLE "Histogram of db in dance pop genre";
+ 315            YAXIS LABEL="Percentage";
+ 316        RUN;
+ 
+ NOTE: PROCEDURE SGPLOT used (Total process time):
+       real time           0.17 seconds
+       user cpu time       0.08 seconds
+       system cpu time     0.00 seconds
+       memory              2966.93k
+       OS Memory           117308.00k
+       Timestamp           12/07/2021 03:04:55 PM
+       Step Count                        105  Switch Count  7
+       Page Faults                       0
+       Page Reclaims                     538
+       Page Swaps                        0
+       Voluntary Context Switches        296
+       Involuntary Context Switches      0
+       Block Input Operations            0
+       Block Output Operations           576
+       
+ NOTE: There were 327 observations read from the data set WORK.AMS.
+       WHERE 'top genre'n='dance pop';
+ 
+ 317        
+ 318        
+ 319        /* Show bar chart of top genre in 2015 */
+ 320        PROC SGPLOT DATA=AMS;
+ 321            VBAR "top genre"n;
+ 322            WHERE year=2015;
+ 323            TITLE "Bar chart of top genre in 2015";
+ 324        RUN;
+ 
+ NOTE: PROCEDURE SGPLOT used (Total process time):
+       real time           0.16 seconds
+       user cpu time       0.07 seconds
+       system cpu time     0.00 seconds
+       memory              2803.12k
+       OS Memory           117308.00k
+       Timestamp           12/07/2021 03:04:55 PM
+       Step Count                        106  Switch Count  4
+       Page Faults                       0
+       Page Reclaims                     648
+       Page Swaps                        0
+       Voluntary Context Switches        310
+       Involuntary Context Switches      0
+       Block Input Operations            0
+       Block Output Operations           560
+       
+ NOTE: There were 95 observations read from the data set WORK.AMS.
+       WHERE year=2015;
+ 
+ 325        
+ 326        
+ 327        /* Count frequency group by artist and year, then delete duplicate records if any */
+ 328        PROC SQL;
+ 329            CREATE TABLE acount AS
+ 330            (SELECT artist, year, COUNT(artist) AS Count
+ 331             FROM AMS
+ 332             GROUP BY year, artist);
+ NOTE: Table WORK.ACOUNT created, with 409 rows and 3 columns.
+ 
+ 333        QUIT;
+ NOTE: PROCEDURE SQL used (Total process time):
+       real time           0.00 seconds
+       user cpu time       0.00 seconds
+       system cpu time     0.00 seconds
+       memory              5755.84k
+       OS Memory           121268.00k
+       Timestamp           12/07/2021 03:04:55 PM
+       Step Count                        107  Switch Count  2
+       Page Faults                       0
+       Page Reclaims                     226
+       Page Swaps                        0
+       Voluntary Context Switches        16
+       Involuntary Context Switches      0
+       Block Input Operations            0
+       Block Output Operations           280
+       
+ 
+ 334        
+ 335        PROC SORT DATA=acount NODUPKEY;
+ 336            BY _ALL_;
+ 337        RUN;
+ 
+ NOTE: There were 409 observations read from the data set WORK.ACOUNT.
+ NOTE: 0 observations with duplicate key values were deleted.
+ NOTE: The data set WORK.ACOUNT has 409 observations and 3 variables.
+ NOTE: PROCEDURE SORT used (Total process time):
+       real time           0.00 seconds
+       user cpu time       0.00 seconds
+       system cpu time     0.00 seconds
+       memory              930.21k
+       OS Memory           116404.00k
+       Timestamp           12/07/2021 03:04:55 PM
+       Step Count                        108  Switch Count  2
+       Page Faults                       0
+       Page Reclaims                     149
+       Page Swaps                        0
+       Voluntary Context Switches        16
+       Involuntary Context Switches      0
+       Block Input Operations            0
+       Block Output Operations           264
+       
+ 
+ 338        
+ 339        
+ 340        /* Show trend of frequency of artist from data above */
+ 341        PROC SGPLOT DATA=acount;
+ 342            SERIES X=year Y=count / GROUP=artist DATALABEL=artist;
+ 343            XAXIS VALUES=(2010 TO 2019 BY 1);
+ 344            TITLE "Trend of frequency of artist from 2010 to 2019";
+ 345        RUN;
+ 
+ NOTE: PROCEDURE SGPLOT used (Total process time):
+       real time           0.85 seconds
+       user cpu time       0.14 seconds
+       system cpu time     0.01 seconds
+       memory              5125.71k
+       OS Memory           121264.00k
+       Timestamp           12/07/2021 03:04:56 PM
+       Step Count                        109  Switch Count  2
+       Page Faults                       0
+       Page Reclaims                     1317
+       Page Swaps                        0
+       Voluntary Context Switches        1500
+       Involuntary Context Switches      1
+       Block Input Operations            0
+       Block Output Operations           808
+       
+ NOTE: Data label collision avoidance has been disabled because the threshold has been reached. You can set LABELMAX=500 in the ODS 
+       GRAPHICS statement to restore collision avoidance.
+ NOTE: Some graph legends have been dropped due to size constraints. Try adjusting the MAXLEGENDAREA=, WIDTH= and HEIGHT= options in 
+       the ODS GRAPHICS statement.
+ NOTE: Data label collision avoidance has been disabled because the threshold has been reached. You can set LABELMAX=500 in the ODS 
+       GRAPHICS statement to restore collision avoidance.
+ NOTE: Some graph legends have been dropped due to size constraints. Try adjusting the MAXLEGENDAREA=, WIDTH= and HEIGHT= options in 
+       the ODS GRAPHICS statement.
+ NOTE: Data label collision avoidance has been disabled because the threshold has been reached. You can set LABELMAX=500 in the ODS 
+       GRAPHICS statement to restore collision avoidance.
+ NOTE: Some graph legends have been dropped due to size constraints. Try adjusting the MAXLEGENDAREA=, WIDTH= and HEIGHT= options in 
+       the ODS GRAPHICS statement.
+ NOTE: There were 409 observations read from the data set WORK.ACOUNT.
+ 
+ 346        
+ 347        
+ 348        /* Find all songs of of selected artists in every year */
+ 349        PROC PRINT DATA=AMS;
+ 350            VAR artist title "top genre"n year;
+ 351            WHERE artist="Justin Bieber" OR artist="Lady Gaga" OR artist="Ed Sheeran";
+ 352            BY year;
+ 353        RUN;
+ 
+ NOTE: There were 41 observations read from the data set WORK.AMS.
+       WHERE artist in ('Ed Sheeran', 'Justin Bieber', 'Lady Gaga');
+ NOTE: PROCEDURE PRINT used (Total process time):
+       real time           0.15 seconds
+       user cpu time       0.15 seconds
+       system cpu time     0.00 seconds
+       memory              2488.75k
+       OS Memory           118716.00k
+       Timestamp           12/07/2021 03:04:56 PM
+       Step Count                        110  Switch Count  1
+       Page Faults                       0
+       Page Reclaims                     205
+       Page Swaps                        0
+       Voluntary Context Switches        6
+       Involuntary Context Switches      0
+       Block Input Operations            0
+       Block Output Operations           72
+       
+ 
+ 354        
+ 355        
+ 356        /* Correlation matrix for variables of selected artists */
+ 357        PROC CORR DATA=AMS PEARSON
+ 358            PLOTS=MATRIX(HISTOGRAM NVAR=ALL)
+ 359            PLOTS(MAXPOINTS=1000000);
+ 360        WHERE artist="Justin Bieber" OR artist="Lady Gaga" OR artist="Ed Sheeran";
+ 361            VAR bpm nrgy dnce dB live val dur acous spch pop;
+ 362        TITLE "Correlation matrix for variables of selected artists";
+ 363        RUN;
+ 
+ NOTE: PROCEDURE CORR used (Total process time):
+       real time           1.15 seconds
+       user cpu time       0.47 seconds
+       system cpu time     0.01 seconds
+       memory              6688.84k
+       OS Memory           121780.00k
+       Timestamp           12/07/2021 03:04:57 PM
+       Step Count                        111  Switch Count  1
+       Page Faults                       0
+       Page Reclaims                     1192
+       Page Swaps                        0
+       Voluntary Context Switches        612
+       Involuntary Context Switches      2
+       Block Input Operations            0
+       Block Output Operations           824
+       
+ 
+ 364        
+ 365        
+ 366        /* Conduct one-way ANOVA for numeric variables of selected artists */
+ 367        PROC ANOVA DATA=AMS;
+ 368            WHERE artist="Justin Bieber" OR artist="Lady Gaga" OR artist="Ed Sheeran";
+ 369        CLASS artist;
+ 370        MODEL bpm nrgy dnce dB live val dur acous spch pop=artist;
+ 371            TITLE "ANOVA for variables of selected artists";
+ 372        RUN;
+ 
+ 373        
+ 374        
+ 375        /* PDF print output till here */
+ 376        ODS PDF CLOSE;
+ NOTE: ODS PDF printed 39 pages to /home/u49784411/ttemp/AMS2640_Output_35.pdf.
+ 377        
+ 378        
+ 379        /* Export sas dataset to sas7bdat */
+ 
+ NOTE: PROCEDURE ANOVA used (Total process time):
+       real time           1.94 seconds
+       user cpu time       1.06 seconds
+       system cpu time     0.11 seconds
+       memory              5200.25k
+       OS Memory           122692.00k
+       Timestamp           12/07/2021 03:04:59 PM
+       Step Count                        112  Switch Count  15
+       Page Faults                       0
+       Page Reclaims                     5456
+       Page Swaps                        0
+       Voluntary Context Switches        4681
+       Involuntary Context Switches      6
+       Block Input Operations            0
+       Block Output Operations           10920
+       
+ 
+ 380        DATA "/home/u49784411/ttemp";
+ 381           SET AMS;
+ 382        RUN;
+ 
+ NOTE: There were 603 observations read from the data set WORK.AMS.
+ NOTE: The data set /home/u49784411/ttemp has 603 observations and 17 variables.
+ NOTE: DATA statement used (Total process time):
+       real time           0.01 seconds
+       user cpu time       0.01 seconds
+       system cpu time     0.00 seconds
+       memory              1084.96k
+       OS Memory           95920.00k
+       Timestamp           12/07/2021 03:04:59 PM
+       Step Count                        113  Switch Count  2
+       Page Faults                       0
+       Page Reclaims                     99
+       Page Swaps                        0
+       Voluntary Context Switches        47
+       Involuntary Context Switches      0
+       Block Input Operations            0
+       Block Output Operations           520
+       
+ 
+ 383        
+ 384        
+ 385        OPTIONS NONOTES NOSTIMER NOSOURCE NOSYNTAXCHECK;
+ 396        
